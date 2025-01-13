@@ -42,7 +42,7 @@ _Output:_
 
 ### 3) Output of a number represented in the Floating Point format
 
-This is one of the most finnicky parts of the program, as the small number of bits inside of a register limits the amount of precision that is needed to represent a floating point number, thus resulting in a less than desirable accuracy of the fractional part of the number.
+This is one of the most finnicky parts of the program, as the small number of bits inside of a register limits the amount of precision that is needed to represent a floating point number, thus resulting in a less than desirable accuracy of the fractional part of the number. Another problem that I haven't solved yet is that the numbers that are between (-1,1) are at an even more disadvantageous position when it comes to displaying the number accurately. (ex: 0.5 is written as ,0)
 
 **_Example 1:_**
 

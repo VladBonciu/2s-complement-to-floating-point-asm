@@ -1,6 +1,9 @@
 .model small
 .stack 200h
 .data
+    a dd ?
+    b dd ?
+    result dd ?
 .code
     ;se stocheaza in ax numarul citit in CC 
     ;poate fi utilizat caracterul '-' pentru introducerea unei valori negative
@@ -108,7 +111,17 @@
         ;daca ax e echivalentul a -32768 in CC e caz special de maximum
         cmp ax, 8000h
         je valoareSpecialaMax
+
+        cmp ax, 0000h
+        je valoareSpecialaZero
+
         jmp prelucrareNumar
+
+        valoareSpecialaZero:
+            ;valoarea speciala e precalculata si pusa in cx, respectiv dx
+            mov cx, 0000h
+            mov dx, 0h
+            ret
 
         valoareSpecialaMax:
             ;valoarea speciala e precalculata si pusa in cx, respectiv dx
@@ -442,6 +455,36 @@
         
         continuareAfisare:
 
+        ;cazul de 0
+
+        mov bx, cx
+        shl bx, 1
+        cmp bx,0
+        je afisareZero
+        jmp continuareAfisare2
+
+        afisareZero:
+            ;daca exponentul si primii 7 biti din mantisa sunt 0 utem afirma ca este 0 reprezentat
+
+            mov dl, '0'
+            mov ah, 02h
+            int 21h
+
+            mov dl, ','
+            mov ah, 02h
+            int 21h
+
+            mov dl, '0'
+            mov ah, 02h
+            int 21h
+
+            pop cx
+            pop dx
+
+            ret 
+
+        continuareAfisare2:
+
        ;.PARTEA INTREAGA
 
         ;scoatem doar bitii din mantisa ai numarului
@@ -586,6 +629,7 @@
         ;scoatem exponentul
         shl ax, 1
         shr ax, 8
+
         sub ax, 127
 
         cmp ax, 7
@@ -815,9 +859,9 @@
         mov ax, @data
         mov ds, ax
 
-        call citireNumarCC
+        ; call citireNumarCC
         
-        call transformareCCInVMSP
+        ; call transformareCCInVMSP
 
         ; ;punem 21,125 in VMSP la nr care trb afisat
         ; mov cx, 41a9h
@@ -838,6 +882,31 @@
         ; ;punem 20.617188 in VMSP la nr care trb afisat (nici acesta)
         ; mov cx, 41a4h
         ; mov dx, 0f000h
+
+        call citireNumarCC
+        
+        call transformareCCInVMSP
+
+        mov     word ptr a + 2, cx    ; Move lower 16 bits of result into AX
+        mov     word ptr a , dx ; Move upper 16 bits of result into BX
+
+        call citireNumarCC
+        
+        call transformareCCInVMSP
+
+        mov     word ptr b + 2, cx    ; Move lower 16 bits of result into AX
+        mov     word ptr b , dx ; Move upper 16 bits of result into BX
+
+        FINIT               ; Initialize the coprocessor
+        FLD     a      ; Load the first value
+        FLD     b      ; Load the second value
+        FDIV           ; Perform addition: ST(0) = ST(0) : ST(1)
+        FSTP    result      ; Store the result in 'result'
+        ; the result should be 0x40bb3333
+
+        mov     cx, word ptr result + 2    ; Move lower 16 bits of result into AX
+        mov     dx, word ptr result  ; Move upper 16 bits of result into BX
+
 
         call afisareVMSP
 
